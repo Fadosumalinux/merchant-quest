@@ -28,19 +28,26 @@ Un mundo abierto donde los usuarios asumen el rol de comerciantes que recorren u
 ## Inicio rápido
 
 ```bash
-# Backend
-cd server
-cp .env.example .env
-npm install
-npx prisma db push
-npx prisma db seed    # Carga todos los NPCs, items, logros y avatares
-npm run dev
+git clone https://github.com/Fadosumalinux/merchant-quest.git
+cd merchant-quest
 
-# Frontend (otra terminal)
-cd client
-npm install
-npm run dev
+# Instalar todo
+cd server && npm install && cd ../client && npm install
+
+# Configurar base de datos
+cd ../server && cp .env.example .env && npx prisma db push && npx prisma db seed
+
+# Arrancar (un solo comando)
+cd .. && npm run dev
 ```
+
+Abre `http://localhost:3001` — ¡listo!
+
+## Arquitectura
+
+Un solo servidor Express en el puerto 3001 sirve:
+- **API** (`/api/*`) — Backend con Prisma + SQLite
+- **Frontend** (`/`) — React compilado estático
 
 ## API Endpoints
 
