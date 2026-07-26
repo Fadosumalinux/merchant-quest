@@ -6,14 +6,17 @@ Juego de comercio, intercambio y subastas con mapa scrollable tipo RPG.
 
 Un mundo abierto donde los usuarios asumen el rol de comerciantes que recorren un mapa amplio descubriendo zonas, comerciando objetos y participando en subastas. Cada transacción se valida con un token único que garantiza la titularidad del traspaso.
 
-## Características
+## Características v2.0
 
-- **Mapa scrollable** con zonas que se desbloquean según el nivel del comerciante
-- **Sistema de tokens** que valida cada transacción de objetos
-- **Niveles y XP** — cada交易 otorga experiencia
-- **Zonas progresivas**: Village Market → Forest → Mountain → Desert → Harbor → Pirate Cove → Royal Capital → Dragon's Lair → Sky Islands → Realm of Legends
-- **NPCs**: Mercaderes, herreros, banqueros, dadores de misiones
-- **Waypoints**: Puestos de comercio, casas de subasta, portales, tesoros
+- **Mapa scrollable** con 8 zonas progresivas que se desbloquean por nivel
+- **Zonas culturales**: Village Market, Romani Caravan, Dragon Bazaar, Medina de Fez, Wall Street Tower, Pirate Cove, Royal Capital, Sky Islands
+- **NPCs culturales**: Gitanos, chinos, marroquíes, wallstreet, piratas — cada uno con su personalidad y diálogos
+- **Sistema de tokens SHA-256** que valida cada transacción
+- **Insignias y logros** con quizzes que enseñan lecciones de comercio
+- **Avatares personalizables** por cultura (15 avatares desbloqueables)
+- **Reputación y reviews** — califica a otros comerciantes
+- **Catálogo diverso de items**: Animales, textiles, joyas, armas, pócimas, instrumentos, artefactos
+- **Sistema de niveles** — cada交易 otorga XP
 
 ## Stack
 
@@ -30,7 +33,7 @@ cd server
 cp .env.example .env
 npm install
 npx prisma db push
-npx prisma db seed
+npx prisma db seed    # Carga todos los NPCs, items, logros y avatares
 npm run dev
 
 # Frontend (otra terminal)
@@ -52,3 +55,36 @@ npm run dev
 | GET | `/api/trades/verify/:hash` | Verificar token |
 | GET | `/api/trades/history` | Historial de trades |
 | GET | `/api/inventory` | Inventario del usuario |
+| GET | `/api/achievements` | Todas las insignias |
+| GET | `/api/achievements/mine` | Mis insignias |
+| POST | `/api/achievements/:id/quiz` | Responder quiz de insignia |
+| POST | `/api/achievements/:id/earn` | Ganar insignia (NPC) |
+| GET | `/api/achievements/stats` | Estadísticas de logros |
+| GET | `/api/avatars` | Todos los avatares |
+| GET | `/api/avatars/mine` | Mi avatar actual |
+| POST | `/api/avatars/equip` | Equipar avatar |
+| POST | `/api/reviews` | Calificar comerciante |
+| GET | `/api/reviews/user/:id` | Reviews de un usuario |
+
+## Zonas del Mapa
+
+| Zona | Cultura | Nivel | Emoji |
+|------|---------|-------|-------|
+| Village Market | Universal | 1 | 🌍 |
+| Romani Caravan | Gitano | 3 | 💃 |
+| Dragon Bazaar | Chino | 5 | 🐉 |
+| Medina de Fez | Marroquí | 8 | 🕌 |
+| Wall Street Tower | Wall Street | 12 | 📊 |
+| Pirate Cove | Fantasía | 15 | 🏴‍☠️ |
+| Royal Capital | Universal | 20 | 👸 |
+| Sky Islands | Fantasía | 30 | ☁️ |
+
+## Logros Destacados
+
+- 🤝 Primer Intercambio — Completa tu primera trade
+- 💃 Iniciado Gitano — Aprende del trueque gitano
+- 🐉 Sabiduría del Dragón — Domina el comercio estratégico
+- 🕌 Maestro del Regateo — Arte del regateo marroquí
+- 📊 101 de Wall Street — Fundamentos del mercado financiero
+- 👑 Leyenda Viva — 100 transacciones perfectas
+- ❓ Secreto del Mercado — ??? (solo se descubre explorando)

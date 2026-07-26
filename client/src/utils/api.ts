@@ -19,15 +19,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 export const api = {
   auth: {
     register: (data: { email: string; username: string; password: string }) =>
-      request<{ token: string; user: { id: string; username: string; level: number; gold: number } }>(
-        "/auth/register",
-        { method: "POST", body: JSON.stringify(data) }
-      ),
+      request<{ token: string; user: any }>("/auth/register", { method: "POST", body: JSON.stringify(data) }),
     login: (data: { email: string; password: string }) =>
-      request<{ token: string; user: { id: string; username: string; level: number; gold: number } }>(
-        "/auth/login",
-        { method: "POST", body: JSON.stringify(data) }
-      ),
+      request<{ token: string; user: any }>("/auth/login", { method: "POST", body: JSON.stringify(data) }),
     me: () => request<any>("/auth/me"),
   },
   zones: {
@@ -43,5 +37,27 @@ export const api = {
   },
   inventory: {
     list: () => request<any[]>("/inventory"),
+  },
+  achievements: {
+    list: () => request<any[]>("/achievements"),
+    mine: () => request<any[]>("/achievements/mine"),
+    quiz: (id: string, answer: string) =>
+      request<any>(`/achievements/${id}/quiz`, { method: "POST", body: JSON.stringify({ answer }) }),
+    earn: (id: string) =>
+      request<any>(`/achievements/${id}/earn`, { method: "POST" }),
+    stats: () => request<any>("/achievements/stats"),
+  },
+  avatars: {
+    list: () => request<any[]>("/avatars"),
+    mine: () => request<any>("/avatars/mine"),
+    equip: (avatarId: string) =>
+      request<any>("/avatars/equip", { method: "POST", body: JSON.stringify({ avatarId }) }),
+    customize: (style: any) =>
+      request<any>("/avatars/customize", { method: "PUT", body: JSON.stringify({ style }) }),
+  },
+  reviews: {
+    post: (data: { tradeId: string; rating: number; comment?: string }) =>
+      request<any>("/reviews", { method: "POST", body: JSON.stringify(data) }),
+    forUser: (userId: string) => request<any>(`/reviews/user/${userId}`),
   },
 };

@@ -8,31 +8,42 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  username  String   @unique
-  password  String
-  gold      Int      @default(100)
-  xp        Int      @default(0)
-  level     Int      @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid())
+  email         String   @unique
+  username      String   @unique
+  password      String
+  gold          Int      @default(100)
+  xp            Int      @default(0)
+  level         Int      @default(1)
+  avatarStyle   String?  // custom avatar config JSON
+  reputation    Int      @default(0) // trading reputation score
+  totalTrades   Int      @default(0)
+  honestTrades  Int      @default(0) // trades without rule-breaking
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  inventory   Inventory[]
-  tradesGiven Trade[]   @relation("traderFrom")
-  tradesTaken Trade[]   @relation("traderTo")
-  tokens      Token[]
+  inventory     Inventory[]
+  tradesGiven   Trade[]   @relation("traderFrom")
+  tradesTaken   Trade[]   @relation("traderTo")
+  tokens        Token[]
+  achievements  UserAchievement[]
+  reviews       Review[]       @relation("reviewed")
+  reviewsGiven  Review[]       @relation("reviewer")
 }
 
 model Item {
-  id          String @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
   description String
-  rarity      String // common, uncommon, rare, epic, legendary
+  category    String  // animals, textiles, weapons, potions, jewelry, food, artifacts, instruments
+  rarity      String  // common, uncommon, rare, epic, legendary
   basePrice   Int
+  emoji       String  // visual icon for the item
+  culture     String? // which culture specializes in this: gypsy, chinese, moroccan, wallstreet, universal
   imageUrl    String?
 
-  inventory Inventory[]
+  inventory   Inventory[]
+  trades      Trade[]
 }
 
 model Inventory {
@@ -48,27 +59,35 @@ model Inventory {
 }
 
 model Zone {
-  id          String @id @default(uuid())
-  name        String
-  description String
+  id            String @id @default(uuid())
+  name          String
+  description   String
+  culture       String  // gypsy, chinese, moroccan, wallstreet, universal, fantasy
   requiredLevel Int
-  mapX        Int
-  mapY        Int
-  width       Int
-  height      Int
-  isUnlocked  Boolean @default(false)
+  mapX          Int
+  mapY          Int
+  width         Int
+  height        Int
+  bgGradient    String? // CSS gradient for zone background
+  musicTheme    String? // ambient music reference
 
   npcs      NPC[]
   trades    Trade[]
   waypoints Waypoint[]
+  achievements Achievement[]
 }
 
 model NPC {
-  id       String @id @default(uuid())
-  name     String
-  zoneId   String
-  role     String // merchant, quest_giver, blacksmith, banker
-  dialog   String
+  id           String @id @default(uuid())
+  name         String
+  zoneId       String
+  role         String // merchant, quest_giver, blacksmith, banker, sage, judge
+  culture      String // gypsy, chinese, moroccan, wallstreet, fantasy
+  personality  String // friendly, stern, mysterious, witty, wise
+  avatarEmoji  String // visual representation
+  dialog       String
+  tradeBonus   Int    @default(0) // bonus reputation for trading with this NPC
+  teachesBadge String? // achievement ID this NPC can award
 
   zone Zone @relation(fields: [zoneId], references: [id])
 }
@@ -82,7 +101,8 @@ model Trade {
   quantity   Int
   totalPrice Int
   tokenHash  String
-  status     String   @default("pending") // pending, completed, cancelled
+  status     String   @default("pending") // pending, completed, cancelled, disputed
+  rating     Int?     // 1-5 star rating from buyer
   createdAt  DateTime @default(now())
 
   fromUser User  @relation("traderFrom", fields: [fromUserId], references: [id])
@@ -90,6 +110,7 @@ model Trade {
   zone     Zone  @relation(fields: [zoneId], references: [id])
   item     Item  @relation(fields: [itemId], references: [id])
   token    Token?
+  reviews  Review[]
 }
 
 model Token {
@@ -113,7 +134,66 @@ model Waypoint {
   name     String
   x        Int
   y        Int
-  type     String // trade_post, auction_house, portal, treasure
+  type     String // trade_post, auction_house, portal, treasure, lesson_shrine
 
   zone Zone @relation(fields: [zoneId], references: [id])
+}
+
+model Achievement {
+  id          String @id @default(uuid())
+  name        String
+  description String
+  badgeEmoji  String  // visual badge icon
+  badgeColor  String  // hex color for badge
+  category    String  // trading, exploration, social, mastery, secret
+  tier        String  // bronze, silver, gold, platinum, diamond
+  xpReward    Int
+  goldReward  Int
+  requiredXp  Int     // XP threshold to unlock this achievement
+  lessonText  String? // lesson/lore text shown when earned
+  quizQuestion String? // optional quiz question to earn badge
+  quizAnswer   String? // correct answer for quiz
+  zoneId      String?
+
+  zone        Zone?            @relation(fields: [zoneId], references: [id])
+  users       UserAchievement[]
+}
+
+model UserAchievement {
+  id          String   @id @default(uuid())
+  userId      String
+  achievementId String
+  earnedAt    DateTime @default(now())
+  quizPassed  Boolean  @default(false) // did they pass the quiz?
+  timesUsed   Int      @default(0)    // how many times badge is displayed
+
+  user        User        @relation(fields: [userId], references: [id])
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+
+  @@unique([userId, achievementId])
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  tradeId    String
+  reviewerId String
+  reviewedId String
+  rating     Int      // 1-5
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  trade    Trade @relation(fields: [tradeId], references: [id])
+  reviewer User  @relation("reviewer", fields: [reviewerId], references: [id])
+  reviewed User  @relation("reviewed", fields: [reviewedId], references: [id])
+}
+
+model Avatar {
+  id          String @id @default(uuid())
+  name        String
+  culture     String  // gypsy, chinese, moroccan, wallstreet, fantasy
+  emoji       String  // base avatar emoji
+  accessory   String? // hat, weapon, instrument, etc.
+  description String
+  unlockLevel Int     // level needed to unlock this avatar
+  price       Int     // gold cost to purchase
 }
