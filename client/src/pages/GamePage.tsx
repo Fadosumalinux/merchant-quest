@@ -23,7 +23,7 @@ export default function GamePage() {
   const [showAvatars, setShowAvatars] = useState(false);
   const [showCatalog, setShowCatalog] = useState(false);
   const [tradingNPC, setTradingNPC] = useState<NPC | null>(null);
-  const [lessonAchievement, setLessonAchievement] = useState<Achievement | null>(null);
+  const [, setLessonAchievement] = useState<Achievement | null>(null);
 
   useEffect(() => {
     api.zones.list().then(setZones).catch(console.error);

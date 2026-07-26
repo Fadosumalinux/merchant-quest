@@ -40,7 +40,7 @@ export default function ItemCatalog({ culture, onClose }: ItemCatalogProps) {
             return (
               <button
                 key={c}
-                onClick={() => setFilter(c)}
+                onClick={() => setFilter(c || "all")}
                 style={{
                   padding: "3px 8px",
                   borderRadius: 10,

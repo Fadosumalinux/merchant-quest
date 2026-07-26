@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "../utils/api";
 import type { Achievement, UserAchievement } from "../types";
-import { TIER_CONFIG, CULTURE_CONFIG } from "../types";
+import { TIER_CONFIG } from "../types";
 
 interface AchievementPanelProps {
   onClose: () => void;
