@@ -1,6 +1,6 @@
-import { useAuth } from "../context/AuthContext";
-import LoginPage from "./LoginPage";
-import GamePage from "./GamePage";
+import { useAuth } from "./context/AuthContext";
+import LoginPage from "./pages/LoginPage";
+import GamePage from "./pages/GamePage";
 
 export default function App() {
   const { user, loading } = useAuth();
