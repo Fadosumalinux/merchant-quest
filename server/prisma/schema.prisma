@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  gold      Int      @default(100)
+  xp        Int      @default(0)
+  level     Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  inventory   Inventory[]
+  tradesGiven Trade[]   @relation("traderFrom")
+  tradesTaken Trade[]   @relation("traderTo")
+  tokens      Token[]
+}
+
+model Item {
+  id          String @id @default(uuid())
+  name        String
+  description String
+  rarity      String // common, uncommon, rare, epic, legendary
+  basePrice   Int
+  imageUrl    String?
+
+  inventory Inventory[]
+}
+
+model Inventory {
+  id       String @id @default(uuid())
+  userId   String
+  itemId   String
+  quantity Int    @default(1)
+
+  user User @relation(fields: [userId], references: [id])
+  item Item @relation(fields: [itemId], references: [id])
+
+  @@unique([userId, itemId])
+}
+
+model Zone {
+  id          String @id @default(uuid())
+  name        String
+  description String
+  requiredLevel Int
+  mapX        Int
+  mapY        Int
+  width       Int
+  height      Int
+  isUnlocked  Boolean @default(false)
+
+  npcs      NPC[]
+  trades    Trade[]
+  waypoints Waypoint[]
+}
+
+model NPC {
+  id       String @id @default(uuid())
+  name     String
+  zoneId   String
+  role     String // merchant, quest_giver, blacksmith, banker
+  dialog   String
+
+  zone Zone @relation(fields: [zoneId], references: [id])
+}
+
+model Trade {
+  id         String   @id @default(uuid())
+  fromUserId String
+  toUserId   String?
+  zoneId     String
+  itemId     String
+  quantity   Int
+  totalPrice Int
+  tokenHash  String
+  status     String   @default("pending") // pending, completed, cancelled
+  createdAt  DateTime @default(now())
+
+  fromUser User  @relation("traderFrom", fields: [fromUserId], references: [id])
+  toUser   User? @relation("traderTo", fields: [toUserId], references: [id])
+  zone     Zone  @relation(fields: [zoneId], references: [id])
+  item     Item  @relation(fields: [itemId], references: [id])
+  token    Token?
+}
+
+model Token {
+  id        String   @id @default(uuid())
+  tradeId   String   @unique
+  hash      String   @unique
+  fromUser  String
+  toUser    String
+  itemId    String
+  quantity  Int
+  valid     Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  trade Trade @relation(fields: [tradeId], references: [id])
+  user  User  @relation(fields: [fromUser], references: [id])
+}
+
+model Waypoint {
+  id       String @id @default(uuid())
+  zoneId   String
+  name     String
+  x        Int
+  y        Int
+  type     String // trade_post, auction_house, portal, treasure
+
+  zone Zone @relation(fields: [zoneId], references: [id])
+}

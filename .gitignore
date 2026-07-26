@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+build/
+.next/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Database
+*.db
+*.db-journal
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug
+npm-debug.log*
