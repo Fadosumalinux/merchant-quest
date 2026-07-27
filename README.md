@@ -25,29 +25,29 @@ Un mundo abierto donde los usuarios asumen el rol de comerciantes que recorren u
 - **Auth**: JWT + bcrypt
 - **Tokens**: SHA-256 hash interno
 
-## Inicio rápido
+## Deploy Gratis (Vercel + Render)
 
 ```bash
-git clone https://github.com/Fadosumalinux/merchant-quest.git
-cd merchant-quest
-
-# Instalar todo
-cd server && npm install && cd ../client && npm install
-
-# Configurar base de datos
-cd ../server && cp .env.example .env && npx prisma db push && npx prisma db seed
-
-# Arrancar (un solo comando)
-cd .. && npm run dev
+# Ejecutar guía de deploy
+./deploy.sh
 ```
 
-Abre `http://localhost:3001` — ¡listo!
+**Paso 1 — Backend en Render (gratis):**
+1. Ve a https://render.com → crea cuenta
+2. `New +` → `Web Service` → conecta GitHub `Fadosumalinux/merchant-quest`
+3. Build: `cd server && npm install && npx prisma generate && npx prisma db push && npx prisma db seed`
+4. Start: `cd server && npx tsx src/index.ts`
+5. Env vars: `DATABASE_URL=file:./prod.db`, `JWT_SECRET=(generar)`, `PORT=3001`
+6. Copia la URL que te da (ej: `https://merchant-quest-api.onrender.com`)
 
-## Arquitectura
+**Paso 2 — Frontend en Vercel (gratis):**
+1. Ve a https://vercel.com → crea cuenta
+2. `Add New` → `Project` → importa GitHub `Fadosumalinux/merchant-quest`
+3. Root Directory: `client`
+4. Env var: `VITE_API_URL` = `https://TU-BACKEND.onrender.com/api`
+5. Click `Deploy`
 
-Un solo servidor Express en el puerto 3001 sirve:
-- **API** (`/api/*`) — Backend con Prisma + SQLite
-- **Frontend** (`/`) — React compilado estático
+**Listo.** Comparte la URL de Vercel con tu equipo. Todos pueden jugar.
 
 ## API Endpoints
 
