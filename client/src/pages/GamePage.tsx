@@ -10,6 +10,7 @@ import AvatarSelector from "../components/AvatarSelector";
 import NPCDialog from "../components/NPCDialog";
 import BadgeShowcase from "../components/BadgeShowcase";
 import ItemCatalog from "../components/ItemCatalog";
+import TutorialOverlay from "../components/TutorialOverlay";
 import type { Zone, NPC, Achievement } from "../types";
 import { CULTURE_CONFIG } from "../types";
 
@@ -23,11 +24,20 @@ export default function GamePage() {
   const [showAvatars, setShowAvatars] = useState(false);
   const [showCatalog, setShowCatalog] = useState(false);
   const [tradingNPC, setTradingNPC] = useState<NPC | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [, setLessonAchievement] = useState<Achievement | null>(null);
 
   useEffect(() => {
     api.zones.list().then(setZones).catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const hasSeenTutorial = localStorage.getItem("mq_tutorial_seen");
+    if (!hasSeenTutorial && user.level === 1 && user.totalTrades === 0) {
+      setShowTutorial(true);
+    }
+  }, [user]);
 
   const handleZoneSelect = async (zone: Zone) => {
     try {
@@ -61,6 +71,7 @@ export default function GamePage() {
           <button onClick={() => setShowAchievements(true)} style={navBtnStyle}>🏆 Insignias</button>
           <button onClick={() => setShowAvatars(true)} style={navBtnStyle}>🎭 Avatar</button>
           <button onClick={() => setShowCatalog(true)} style={navBtnStyle}>📦 Items</button>
+          <button onClick={() => setShowTutorial(true)} style={{ ...navBtnStyle, background: "#444" }}>❓ Ayuda</button>
           <button onClick={() => setShowVerifier(true)} style={navBtnStyle}>🔍 Token</button>
           <button onClick={refreshUser} style={navBtnStyle}>🔄</button>
           <button onClick={logout} style={{ ...navBtnStyle, background: "#6b3a3a" }}>Salir</button>
@@ -176,6 +187,15 @@ export default function GamePage() {
         />
       )}
       {showCatalog && <ItemCatalog onClose={() => setShowCatalog(false)} />}
+
+      {showTutorial && (
+        <TutorialOverlay
+          onClose={() => {
+            localStorage.setItem("mq_tutorial_seen", "1");
+            setShowTutorial(false);
+          }}
+        />
+      )}
     </div>
   );
 }
