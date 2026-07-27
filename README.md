@@ -2,96 +2,29 @@
 
 Juego de comercio, intercambio y subastas con mapa scrollable tipo RPG.
 
-## Concepto
+## Deploy Gratis (Railway — 1 clic)
 
-Un mundo abierto donde los usuarios asumen el rol de comerciantes que recorren un mapa amplio descubriendo zonas, comerciando objetos y participando en subastas. Cada transacción se valida con un token único que garantiza la titularidad del traspaso.
+1. Ve a https://railway.app
+2. Click **"New Project"** → **"Deploy from GitHub repo"**
+3. Selecciona `Fadosumalinux/merchant-quest`
+4. Railway auto-detecta todo. Espera 2-3 minutos.
+5. Click en tu servicio → copia la URL pública
+6. **Comparte esa URL con tu equipo.** Listo.
 
-## Características v2.0
+No necesitas tu máquina encendida. Todos pueden jugar desde cualquier dispositivo.
 
-- **Mapa scrollable** con 8 zonas progresivas que se desbloquean por nivel
-- **Zonas culturales**: Village Market, Romani Caravan, Dragon Bazaar, Medina de Fez, Wall Street Tower, Pirate Cove, Royal Capital, Sky Islands
-- **NPCs culturales**: Gitanos, chinos, marroquíes, wallstreet, piratas — cada uno con su personalidad y diálogos
-- **Sistema de tokens SHA-256** que valida cada transacción
-- **Insignias y logros** con quizzes que enseñan lecciones de comercio
-- **Avatares personalizables** por cultura (15 avatares desbloqueables)
-- **Reputación y reviews** — califica a otros comerciantes
-- **Catálogo diverso de items**: Animales, textiles, joyas, armas, pócimas, instrumentos, artefactos
-- **Sistema de niveles** — cada交易 otorga XP
+## Características
+
+- Mapa scrollable con 8 zonas culturales
+- NPCs: Gitanos, Chinos, Marroquíes, Wall Street, Piratas
+- 30+ items: Animales, sedas, especias, acciones, tesoros
+- Sistema de tokens SHA-256 por transacción
+- 17 insignias con quizzes y lecciones
+- 15 avatares personalizables
+- Reviews y reputación de comerciantes
 
 ## Stack
 
-- **Frontend**: React + Vite + TypeScript + React Router
-- **Backend**: Node.js + Express + Prisma + SQLite
-- **Auth**: JWT + bcrypt
-- **Tokens**: SHA-256 hash interno
-
-## Deploy Gratis (Vercel + Render)
-
-```bash
-# Ejecutar guía de deploy
-./deploy.sh
-```
-
-**Paso 1 — Backend en Render (gratis):**
-1. Ve a https://render.com → crea cuenta
-2. `New +` → `Web Service` → conecta GitHub `Fadosumalinux/merchant-quest`
-3. Build: `cd server && npm install && npx prisma generate && npx prisma db push && npx prisma db seed`
-4. Start: `cd server && npx tsx src/index.ts`
-5. Env vars: `DATABASE_URL=file:./prod.db`, `JWT_SECRET=(generar)`, `PORT=3001`
-6. Copia la URL que te da (ej: `https://merchant-quest-api.onrender.com`)
-
-**Paso 2 — Frontend en Vercel (gratis):**
-1. Ve a https://vercel.com → crea cuenta
-2. `Add New` → `Project` → importa GitHub `Fadosumalinux/merchant-quest`
-3. Root Directory: `client`
-4. Env var: `VITE_API_URL` = `https://TU-BACKEND.onrender.com/api`
-5. Click `Deploy`
-
-**Listo.** Comparte la URL de Vercel con tu equipo. Todos pueden jugar.
-
-## API Endpoints
-
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| POST | `/api/auth/register` | Registrar usuario |
-| POST | `/api/auth/login` | Iniciar sesión |
-| GET | `/api/auth/me` | Perfil del usuario |
-| GET | `/api/zones` | Listar zonas |
-| POST | `/api/zones/travel/:id` | Viajar a zona |
-| POST | `/api/trades` | Crear transacción |
-| GET | `/api/trades/verify/:hash` | Verificar token |
-| GET | `/api/trades/history` | Historial de trades |
-| GET | `/api/inventory` | Inventario del usuario |
-| GET | `/api/achievements` | Todas las insignias |
-| GET | `/api/achievements/mine` | Mis insignias |
-| POST | `/api/achievements/:id/quiz` | Responder quiz de insignia |
-| POST | `/api/achievements/:id/earn` | Ganar insignia (NPC) |
-| GET | `/api/achievements/stats` | Estadísticas de logros |
-| GET | `/api/avatars` | Todos los avatares |
-| GET | `/api/avatars/mine` | Mi avatar actual |
-| POST | `/api/avatars/equip` | Equipar avatar |
-| POST | `/api/reviews` | Calificar comerciante |
-| GET | `/api/reviews/user/:id` | Reviews de un usuario |
-
-## Zonas del Mapa
-
-| Zona | Cultura | Nivel | Emoji |
-|------|---------|-------|-------|
-| Village Market | Universal | 1 | 🌍 |
-| Romani Caravan | Gitano | 3 | 💃 |
-| Dragon Bazaar | Chino | 5 | 🐉 |
-| Medina de Fez | Marroquí | 8 | 🕌 |
-| Wall Street Tower | Wall Street | 12 | 📊 |
-| Pirate Cove | Fantasía | 15 | 🏴‍☠️ |
-| Royal Capital | Universal | 20 | 👸 |
-| Sky Islands | Fantasía | 30 | ☁️ |
-
-## Logros Destacados
-
-- 🤝 Primer Intercambio — Completa tu primera trade
-- 💃 Iniciado Gitano — Aprende del trueque gitano
-- 🐉 Sabiduría del Dragón — Domina el comercio estratégico
-- 🕌 Maestro del Regateo — Arte del regateo marroquí
-- 📊 101 de Wall Street — Fundamentos del mercado financiero
-- 👑 Leyenda Viva — 100 transacciones perfectas
-- ❓ Secreto del Mercado — ??? (solo se descubre explorando)
+- React + Vite + TypeScript (frontend)
+- Express + Prisma + SQLite (backend)
+- JWT + bcrypt (auth)
