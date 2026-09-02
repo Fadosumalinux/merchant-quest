@@ -1,6 +1,7 @@
 import { Router } from "express";
 import prisma from "../config/database.js";
 import { authMiddleware, AuthRequest } from "../middleware/auth.js";
+import { applyXpAndGold } from "../services/gameService.js";
 import { z } from "zod";
 
 const router = Router();
@@ -79,18 +80,12 @@ router.post("/", authMiddleware, async (req: AuthRequest, res) => {
       if (!existingBadge) {
         const achievement = await prisma.achievement.findUnique({ where: { id: "ach-5-star" } });
         if (achievement) {
-          await prisma.$transaction([
-            prisma.userAchievement.create({
+          await prisma.$transaction(async (tx) => {
+            await tx.userAchievement.create({
               data: { userId: reviewedId, achievementId: "ach-5-star", quizPassed: true },
-            }),
-            prisma.user.update({
-              where: { id: reviewedId },
-              data: {
-                xp: { increment: achievement.xpReward },
-                gold: { increment: achievement.goldReward },
-              },
-            }),
-          ]);
+            });
+            await applyXpAndGold(tx, reviewedId, achievement.xpReward, achievement.goldReward);
+          });
         }
       }
     }
@@ -108,14 +103,14 @@ router.post("/", authMiddleware, async (req: AuthRequest, res) => {
 // Get reviews for a user
 router.get("/user/:userId", async (req, res) => {
   const reviews = await prisma.review.findMany({
-    where: { reviewedId: req.params.userId },
+    where: { reviewedId: req.params.userId as string },
     include: { reviewer: { select: { username: true } }, trade: { include: { item: true } } },
     orderBy: { createdAt: "desc" },
     take: 20,
   });
 
   const avg = await prisma.review.aggregate({
-    where: { reviewedId: req.params.userId },
+    where: { reviewedId: req.params.userId as string },
     _avg: { rating: true },
     _count: { rating: true },
   });

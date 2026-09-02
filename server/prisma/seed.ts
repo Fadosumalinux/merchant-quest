@@ -2,14 +2,24 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log("Seeding database...");
-
-  // Clean existing data via raw SQL (avoids Prisma model name casing issues)
-  const tables = ["UserAchievement", "Review", "Token", "Trade", "Inventory", "Waypoint", "NPC", "Achievement", "Avatar", "Item", "Zone", "User"];
-  for (const t of tables) {
-    await prisma.$executeRawUnsafe(`DELETE FROM "${t}"`);
+// Idempotent seed: catalog data is upserted by id so it can safely run on
+// every deploy WITHOUT wiping users, inventory, trades or achievements.
+async function upsertAll<K extends string, T extends { id: K }>(
+  table: "zone" | "item" | "nPC" | "achievement" | "avatar" | "waypoint",
+  rows: T[]
+) {
+  const create = table as "zone" | "item" | "nPC" | "achievement" | "avatar" | "waypoint";
+  for (const row of rows) {
+    await (prisma[create] as any).upsert({
+      where: { id: row.id },
+      update: { ...row },
+      create: { ...row },
+    });
   }
+}
+
+async function main() {
+  console.log("Seeding database (idempotent)...");
 
   // === ZONES ===
   const zonesData = [
@@ -23,9 +33,7 @@ async function main() {
     { id: "zone-sky", name: "Sky Islands", description: "Las islas flotantes del comercio celestial. Solo los maestros pueden llegar aquí.", culture: "fantasy", requiredLevel: 30, mapX: 1400, mapY: 600, width: 280, height: 220, bgGradient: "linear-gradient(135deg, #6b8c9a 0%, #a0d2db 100%)" },
   ];
 
-  for (const z of zonesData) {
-    await prisma.zone.create({ data: z });
-  }
+  await upsertAll("zone", zonesData);
   console.log("  ✓ 8 zones");
 
   // === ITEMS ===
@@ -68,10 +76,8 @@ async function main() {
     { id: "item-cannon", name: "Cañón Portátil", description: "Para negociaciones que requieren énfasis.", category: "weapons", rarity: "epic", basePrice: 200, emoji: "💣", culture: "fantasy" },
   ];
 
-  for (const item of itemsData) {
-    await prisma.item.create({ data: item });
-  }
-  console.log("  ✓ 33 items");
+  await upsertAll("item", itemsData);
+  console.log("  ✓ 36 items");
 
   // === NPCs ===
   const npcsData = [
@@ -97,23 +103,24 @@ async function main() {
     { id: "npc-sky-1", name: "Comerciante Celestial", zoneId: "zone-sky", role: "merchant", culture: "fantasy", personality: "mysterious", avatarEmoji: "☁️", dialog: "Aquí arriba, el comercio trasciende lo material.", tradeBonus: 25, teachesBadge: "ach-ascension" },
   ];
 
-  for (const npc of npcsData) {
-    await prisma.nPC.create({ data: npc });
-  }
+  await upsertAll("nPC", npcsData);
   console.log("  ✓ 20 NPCs");
 
   // === ACHIEVEMENTS ===
   const achievementsData = [
-    { id: "ach-first-trade", name: "Primer Intercambio", description: "Completa tu primera transacción.", badgeEmoji: "🤝", badgeColor: "#cd7f32", category: "trading", tier: "bronze", xpReward: 50, goldReward: 25, requiredXp: 0, lessonText: "Todo gran comerciante empezó con un simple trueque. La confianza se construye交易交易交易.", quizQuestion: "¿Qué es lo más importante en tu primera transacción?", quizAnswer: "Confianza" },
+    { id: "ach-first-trade", name: "Primer Intercambio", description: "Completa tu primera transacción.", badgeEmoji: "🤝", badgeColor: "#cd7f32", category: "trading", tier: "bronze", xpReward: 50, goldReward: 25, requiredXp: 0, lessonText: "Todo gran comerciante empezó con un simple trueque. La confianza se construye transacción a transacción.", quizQuestion: "¿Qué es lo más importante en tu primera transacción?", quizAnswer: "Confianza" },
     { id: "ach-10-trades", name: "Comerciante Activo", description: "Completa 10 transacciones exitosas.", badgeEmoji: "⭐", badgeColor: "#c0c0c0", category: "trading", tier: "silver", xpReward: 100, goldReward: 50, requiredXp: 0, lessonText: "La constancia es la madre del éxito.", quizQuestion: "¿Qué haces cuando un negocio no sale como esperabas?", quizAnswer: "Aprendo y sigo adelante" },
     { id: "ach-50-trades", name: "Magnate del Mercado", description: "Completa 50 transacciones sin reglas rotas.", badgeEmoji: "🏆", badgeColor: "#ffd700", category: "trading", tier: "gold", xpReward: 300, goldReward: 200, requiredXp: 0, lessonText: "Los verdaderos magnates no solo ganan dinero — ganan respeto.", quizQuestion: "¿Qué define a un verdadero magnate?", quizAnswer: "Respeto y ética" },
     { id: "ach-100-trades", name: "Leyenda Viva", description: "100 transacciones perfectas.", badgeEmoji: "👑", badgeColor: "#e5e4e2", category: "trading", tier: "platinum", xpReward: 500, goldReward: 500, requiredXp: 0, lessonText: "Tu nombre será recordado.", quizQuestion: "¿Qué legado deja un comerciante legendario?", quizAnswer: "Un ejemplo para otros" },
+    { id: "ach-lesson-1", name: "La Primera Lección", description: "Aprende la primera lección del Sabio Pueblo.", badgeEmoji: "📜", badgeColor: "#4a7c59", category: "mastery", tier: "bronze", xpReward: 50, goldReward: 30, requiredXp: 0, lessonText: "El comercio empieza por escuchar: entender qué necesita el otro antes de ofrecer algo.", quizQuestion: "¿Cuál es el primer paso del buen comerciante?", quizAnswer: "Escuchar" },
     { id: "ach-gypsy-initiation", name: "Iniciado Gitano", description: "Aprende los secretos del trueque gitano.", badgeEmoji: "💃", badgeColor: "#c44569", category: "exploration", tier: "bronze", xpReward: 75, goldReward: 30, requiredXp: 0, lessonText: "El comercio gitano se basa en la intuición y el encanto.", quizQuestion: "¿Qué vende realmente un comerciante gitano?", quizAnswer: "Experiencias e historias" },
+    { id: "ach-gypsy-master", name: "Rey Romaní", description: "Demuestra maestría en el trueque gitano ante el Rey Romaní.", badgeEmoji: "👑", badgeColor: "#c44569", category: "mastery", tier: "silver", xpReward: 150, goldReward: 100, requiredXp: 0, lessonText: "Los gitanos truecan, no venden: el trato es un pacto de honor.", quizQuestion: "¿Cómo se sella un trato gitano?", quizAnswer: "Pacto de honor" },
     { id: "ach-chinese-wisdom", name: "Sabiduría del Dragón", description: "Domina el arte del comercio estratégico.", badgeEmoji: "🐉", badgeColor: "#cc0000", category: "exploration", tier: "silver", xpReward: 120, goldReward: 80, requiredXp: 0, lessonText: "La paciencia es poder.", quizQuestion: "¿Cuál es el arma secreta del comercio oriental?", quizAnswer: "Paciencia y estrategia" },
     { id: "ach-moroccan-haggler", name: "Maestro del Regateo", description: "Aprende el arte del regateo marroquí.", badgeEmoji: "🕌", badgeColor: "#e8a838", category: "exploration", tier: "silver", xpReward: 120, goldReward: 80, requiredXp: 0, lessonText: "El regateo es una danza. Ambas partes deben ganar.", quizQuestion: "¿Qué hace especial al regateo marroquí?", quizAnswer: "Ambas partes ganan" },
     { id: "ach-wall-street-101", name: "101 de Wall Street", description: "Aprende los fundamentos del mercado.", badgeEmoji: "📊", badgeColor: "#2d2d7a", category: "mastery", tier: "gold", xpReward: 200, goldReward: 150, requiredXp: 0, lessonText: "El mercado refleja el miedo y la codicia humana.", quizQuestion: "¿Qué impulsa los mercados financieros?", quizAnswer: "Miedo y codicia humana" },
+    { id: "ach-market-master", name: "Maestro del Mercado", description: "Victoria Shortsell pondrá a prueba tu temple financiero.", badgeEmoji: "📉", badgeColor: "#2d2d7a", category: "mastery", tier: "gold", xpReward: 250, goldReward: 150, requiredXp: 0, lessonText: "El mercado no perdona la codicia: entra con plan y sal con disciplina.", quizQuestion: "¿Qué protege tu capital?", quizAnswer: "La disciplina" },
     { id: "ach-explorer", name: "Explorador del Mapa", description: "Visita todas las zonas.", badgeEmoji: "🗺️", badgeColor: "#4a9", category: "exploration", tier: "gold", xpReward: 250, goldReward: 100, requiredXp: 0, lessonText: "Cada cultura tiene algo que enseñarte.", quizQuestion: "¿Por qué explorar todas las culturas?", quizAnswer: "Cada una enseña algo único" },
-    { id: "ach-silk-road", name: "Ruta de la Seda", description: "5 transacciones en cada zona cultural.", badgeEmoji: "🧣", badgeColor: "#8b0000", category: "exploration", tier: "epic", xpReward: 400, goldReward: 250, requiredXp: 0, lessonText: "Tú conectas mundos con cada交易.", quizQuestion: "¿Qué conecta civilizaciones a través del comercio?", quizAnswer: "El intercambio cultural" },
+    { id: "ach-silk-road", name: "Ruta de la Seda", description: "5 transacciones en cada zona cultural.", badgeEmoji: "🧣", badgeColor: "#8b0000", category: "exploration", tier: "epic", xpReward: 400, goldReward: 250, requiredXp: 0, lessonText: "Tú conectas mundos con cada intercambio.", quizQuestion: "¿Qué conecta civilizaciones a través del comercio?", quizAnswer: "El intercambio cultural" },
     { id: "ach-5-star", name: "Cinco Estrellas", description: "5 calificaciones de 5 estrellas.", badgeEmoji: "⭐", badgeColor: "#ffd700", category: "social", tier: "gold", xpReward: 200, goldReward: 100, requiredXp: 0, lessonText: "Tu reputación te precede.", quizQuestion: "¿Qué abre más puertas en el comercio?", quizAnswer: "La buena reputación" },
     { id: "ach-golden-deal", name: "El Negocio Dorado", description: "Cierra un negocio por +1000 oro.", badgeEmoji: "💰", badgeColor: "#ffd700", category: "trading", tier: "epic", xpReward: 300, goldReward: 100, requiredXp: 0, lessonText: "Los grandes negocios requieren valor y preparación.", quizQuestion: "¿Qué se necesita para un gran negocio?", quizAnswer: "Valor y preparación" },
     { id: "ach-lesson-master", name: "Maestro de Lecciones", description: "Completa todas las lecciones del Consejero.", badgeEmoji: "📜", badgeColor: "#8c6b3a", category: "mastery", tier: "platinum", xpReward: 500, goldReward: 300, requiredXp: 0, lessonText: "El verdadero maestro enseña con ejemplo.", quizQuestion: "¿Qué hace a un verdadero maestro?", quizAnswer: "Enseñar con ejemplo" },
@@ -123,14 +130,12 @@ async function main() {
     { id: "ach-secret", name: "Secreto del Mercado", description: "??? — Solo se descubre explorando.", badgeEmoji: "❓", badgeColor: "#333", category: "secret", tier: "legendary", xpReward: 500, goldReward: 500, requiredXp: 0, lessonText: "La curiosidad es la mayor virtud.", quizQuestion: "¿Qué descubriste?", quizAnswer: "La curiosidad es la mayor virtud" },
   ];
 
-  for (const ach of achievementsData) {
-    await prisma.achievement.create({ data: ach });
-  }
-  console.log("  ✓ 17 achievements");
+  await upsertAll("achievement", achievementsData);
+  console.log("  ✓ 20 achievements");
 
   // === AVATARS ===
   const avatarsData = [
-    { id: "av-gypsy-1", name: "Gitano del Camino", culture: "gypsy", emoji: "🧝", accessory: "Pandereta", description: "Nómada nato携带着 la sabiduría del camino.", unlockLevel: 1, price: 0 },
+    { id: "av-gypsy-1", name: "Gitano del Camino", culture: "gypsy", emoji: "🧝", accessory: "Pandereta", description: "Nómada nato con la sabiduría del camino.", unlockLevel: 1, price: 0 },
     { id: "av-gypsy-2", name: "Gitana Vidente", culture: "gypsy", emoji: "🔮", accessory: "Bola de cristal", description: "Ve el futuro de los mercados en las estrellas.", unlockLevel: 5, price: 100 },
     { id: "av-gypsy-3", name: "Rey Romaní", culture: "gypsy", emoji: "👑", accessory: "Capa de terciopelo", description: "El rey de la caravana.", unlockLevel: 15, price: 500 },
     { id: "av-chinese-1", name: "Mercader de la Seda", culture: "chinese", emoji: "👘", accessory: "Abanico", description: "Especialista en sedas y negocios sutiles.", unlockLevel: 1, price: 0 },
@@ -147,9 +152,7 @@ async function main() {
     { id: "av-fantasy-3", name: "Dragón Comerciante", culture: "fantasy", emoji: "🐲", accessory: "Colmillo de plata", description: "El comerciante más temido de todos los reinos.", unlockLevel: 30, price: 2000 },
   ];
 
-  for (const av of avatarsData) {
-    await prisma.avatar.create({ data: av });
-  }
+  await upsertAll("avatar", avatarsData);
   console.log("  ✓ 15 avatars");
 
   // === WAYPOINTS ===
@@ -172,9 +175,7 @@ async function main() {
     { id: "wp-s-2", zoneId: "zone-sky", name: "Observatorio Celestial", x: 180, y: 140, type: "treasure" },
   ];
 
-  for (const wp of waypointsData) {
-    await prisma.waypoint.create({ data: wp });
-  }
+  await upsertAll("waypoint", waypointsData);
   console.log("  ✓ 16 waypoints");
 
   console.log("\nSeeding complete!");

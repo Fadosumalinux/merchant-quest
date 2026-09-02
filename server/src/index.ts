@@ -6,6 +6,7 @@ import { config } from "./config/constants.js";
 import authRoutes from "./routes/auth.js";
 import zoneRoutes from "./routes/zones.js";
 import tradeRoutes from "./routes/trades.js";
+import itemRoutes from "./routes/items.js";
 import inventoryRoutes from "./routes/inventory.js";
 import achievementRoutes from "./routes/achievements.js";
 import avatarRoutes from "./routes/avatars.js";
@@ -23,6 +24,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/zones", zoneRoutes);
 app.use("/api/trades", tradeRoutes);
+app.use("/api/items", itemRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/achievements", achievementRoutes);
 app.use("/api/avatars", avatarRoutes);
@@ -30,6 +32,11 @@ app.use("/api/reviews", reviewRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", game: "merchant-quest", version: "2.0.0" });
+});
+
+// Unknown API routes must return JSON 404, not the SPA fallback.
+app.use("/api", (_req, res) => {
+  res.status(404).json({ error: "API endpoint not found" });
 });
 
 // Serve frontend (compiled React app)

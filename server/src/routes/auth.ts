@@ -31,8 +31,22 @@ router.post("/register", async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(data.password, 10);
-    const user = await prisma.user.create({
-      data: { ...data, password: hashed },
+    const user = await prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: { ...data, password: hashed },
+      });
+
+      // Starter kit so new merchants can start trading immediately.
+      const starter = [
+        { itemId: "item-wheat", quantity: 5 },
+        { itemId: "item-water", quantity: 3 },
+      ];
+      for (const s of starter) {
+        await tx.inventory.create({
+          data: { userId: created.id, itemId: s.itemId, quantity: s.quantity },
+        });
+      }
+      return created;
     });
 
     const token = jwt.sign({ userId: user.id }, config.jwtSecret, { expiresIn: "7d" });
@@ -82,6 +96,9 @@ router.get("/me", authMiddleware, async (req: AuthRequest, res) => {
     gold: user.gold,
     xp: user.xp,
     level: user.level,
+    reputation: user.reputation,
+    totalTrades: user.totalTrades,
+    honestTrades: user.honestTrades,
     inventory: user.inventory,
   });
 });

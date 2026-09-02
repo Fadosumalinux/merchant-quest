@@ -1,9 +1,6 @@
 import { Router } from "express";
 import prisma from "../config/database.js";
 import { authMiddleware, AuthRequest } from "../middleware/auth.js";
-import { calculateLevel, xpForNextLevel } from "../services/tokenService.js";
-import { generateTokenHash } from "../services/tokenService.js";
-import { z } from "zod";
 
 const router = Router();
 
@@ -17,7 +14,7 @@ router.get("/", async (_req, res) => {
 
 router.get("/:id", async (req, res) => {
   const zone = await prisma.zone.findUnique({
-    where: { id: req.params.id },
+    where: { id: req.params.id as string },
     include: { npcs: true, waypoints: true },
   });
   if (!zone) {
@@ -28,7 +25,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/travel/:id", authMiddleware, async (req: AuthRequest, res) => {
-  const zone = await prisma.zone.findUnique({ where: { id: req.params.id } });
+  const zone = await prisma.zone.findUnique({ where: { id: req.params.id as string } });
   if (!zone) {
     res.status(404).json({ error: "Zone not found" });
     return;
